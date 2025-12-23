@@ -1,0 +1,67 @@
+{
+  "name": "wlfryt-youtube-studio",
+  "version": "1.0.0",
+  "description": "Standalone YouTube Studio app with persistent login and hardened security",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "build:all": "electron-builder --win --mac --linux",
+    "build:script": "node scripts/build.js",
+    "build:script:win": "node scripts/build.js win",
+    "build:script:mac": "node scripts/build.js mac",
+    "build:script:linux": "node scripts/build.js linux"
+  },
+  "author": "WlfRyt",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1"
+  },
+  "dependencies": {
+    "auto-launch": "^5.0.6",
+    "electron-store": "^8.1.0",
+    "keytar": "^7.9.0"
+  },
+  "build": {
+    "appId": "com.wlfryt.youtube-studio",
+    "productName": "WlfRyt YouTube Studio",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        },
+        {
+          "target": "dir",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/WlfRyt-Youtube-Studio-Icon-Cropped.png",
+      "signAndEditExecutable": false
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/WlfRyt-Youtube-Studio-Icon-Cropped.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/WlfRyt-Youtube-Studio-Icon-Cropped.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "forceCodeSigning": false
+  }
+}

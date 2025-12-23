@@ -1,0 +1,137 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0)'
+        required: true
+        default: '1.0.0'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win
+            artifact: '*.exe'
+          - os: ubuntu-latest
+            platform: linux
+            artifact: '*.AppImage'
+          - os: macos-latest
+            platform: mac
+            artifact: '*.dmg'
+
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for ${{ matrix.platform }}
+        run: npm run build:${{ matrix.platform }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.platform }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.AppImage
+            dist/*.zip
+            dist/*.yml
+          if-no-files-found: warn
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            echo "tag=v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: List artifacts
+        run: |
+          echo "Artifacts to release:"
+          find artifacts -type f -name "*" | head -50
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: WlfRyt YouTube Studio v${{ steps.version.outputs.version }}
+          body: |
+            ## WlfRyt YouTube Studio v${{ steps.version.outputs.version }}
+            
+            A standalone desktop application for YouTube Studio with persistent login and hardened security.
+            
+            ### Downloads
+            
+            | Platform | File |
+            |----------|------|
+            | Windows | `WlfRyt-YouTube-Studio-Setup-${{ steps.version.outputs.version }}.exe` |
+            | macOS | `WlfRyt-YouTube-Studio-${{ steps.version.outputs.version }}.dmg` |
+            | Linux | `WlfRyt-YouTube-Studio-${{ steps.version.outputs.version }}.AppImage` |
+            
+            ### Features
+            - 🔐 Persistent login with encrypted session storage
+            - 🛡️ Hardened security (sandbox, context isolation)
+            - 💻 Native desktop experience
+            - 🔒 Machine-specific encryption keys
+            
+            ### Installation
+            
+            **Windows:** Download and run the `.exe` installer
+            
+            **macOS:** Download the `.dmg`, open it, and drag to Applications
+            
+            **Linux:** Download the `.AppImage`, make it executable (`chmod +x`), and run
+            
+            ---
+            
+            > ⚠️ This is an unofficial application. YouTube and YouTube Studio are trademarks of Google LLC.
+          draft: false
+          prerelease: false
+          files: |
+            artifacts/**/*.exe
+            artifacts/**/*.dmg
+            artifacts/**/*.AppImage
+            artifacts/**/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
+    <title>Connection Error - YouTube Studio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+        }
+        
+        .error-container {
+            text-align: center;
+            padding: 40px;
+            max-width: 500px;
+        }
+        
+        .error-icon {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 24px;
+        }
+        
+        .error-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: #ff6b6b;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 16px;
+            color: #ffffff;
+        }
+        
+        p {
+            font-size: 16px;
+            color: #a0a0a0;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        
+        .retry-btn {
+            background: #ff0000;
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .retry-btn:hover {
+            background: #cc0000;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 0, 0, 0.3);
+        }
+        
+        .tips {
+            margin-top: 40px;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+        }
+        
+        .tips h3 {
+            font-size: 14px;
+            color: #ffffff;
+            margin-bottom: 12px;
+        }
+        
+        .tips ul {
+            list-style: none;
+            color: #a0a0a0;
+            font-size: 14px;
+        }
+        
+        .tips li {
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .tips li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-icon">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="none"/>
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+            </svg>
+        </div>
+        
+        <h1>Unable to Connect</h1>
+        <p>We couldn't connect to YouTube Studio. Please check your internet connection and try again.</p>
+        
+        <button class="retry-btn" onclick="window.location.href='https://studio.youtube.com/'">
+            Try Again
+        </button>
+        
+        <div class="tips">
+            <h3>Troubleshooting Tips:</h3>
+            <ul>
+                <li>Check your internet connection</li>
+                <li>Make sure YouTube is not blocked on your network</li>
+                <li>Try restarting the application</li>
+                <li>Check if YouTube is experiencing outages</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

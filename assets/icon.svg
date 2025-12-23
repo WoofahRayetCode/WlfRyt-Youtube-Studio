@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF0000;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#CC0000;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="120" fill="url(#bgGrad)"/>
+  <!-- Play button triangle -->
+  <polygon points="100,80 100,176 180,128" fill="white"/>
+  <!-- Studio gear overlay -->
+  <circle cx="180" cy="180" r="50" fill="#282828" stroke="white" stroke-width="4"/>
+  <path d="M180,145 L180,155 M180,205 L180,215 M145,180 L155,180 M205,180 L215,180 M155,155 L162,162 M198,198 L205,205 M155,205 L162,198 M198,162 L205,155" 
+        stroke="white" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="180" cy="180" r="20" fill="none" stroke="white" stroke-width="6"/>
+</svg>
