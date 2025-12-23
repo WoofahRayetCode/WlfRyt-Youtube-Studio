@@ -1,4 +1,5 @@
 @echo off
+setlocal enabledelayedexpansion
 echo ========================================
 echo   WlfRyt YouTube Studio Build Script
 echo ========================================
@@ -6,19 +7,24 @@ echo.
 
 cd /d "%~dp0.."
 
-:: Get version from package.json
-for /f "tokens=2 delims=:," %%a in ('findstr /c:"\"version\"" package.json') do (
-    set VERSION=%%~a
-    set VERSION=!VERSION: =!
-    goto :gotversion
+:: Generate timestamp-based version (YYYY.MM.DD.HHMM)
+for /f "tokens=1-4 delims=/ " %%a in ('date /t') do (
+    set DATESTAMP=%%d.%%b.%%c
 )
-:gotversion
-set VERSION=%VERSION:"=%
-set VERSION=%VERSION: =%
-if "%VERSION%"=="" set VERSION=1.0.0
+for /f "tokens=1-2 delims=: " %%a in ('time /t') do (
+    set TIMESTAMP=%%a%%b
+)
+:: Remove any spaces and format properly
+set TIMESTAMP=%TIMESTAMP: =0%
+set VERSION=%date:~10,4%.%date:~4,2%.%date:~7,2%.%time:~0,2%%time:~3,2%
+set VERSION=%VERSION: =0%
 
-echo Version: %VERSION%
+echo Version: %VERSION% (timestamp)
 echo.
+
+:: Update package.json with new version using PowerShell
+echo Updating package.json version...
+powershell -Command "(Get-Content package.json -Raw) -replace '\"version\": \"[^\"]*\"', '\"version\": \"%VERSION%\"' | Set-Content package.json -Encoding UTF8"
 
 echo Installing dependencies...
 call npm install
