@@ -2,34 +2,22 @@ name: Build and Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to release (e.g., 1.0.0)'
-        required: true
-        default: '1.0.0'
 
 permissions:
   contents: write
 
 jobs:
   build:
-    strategy:
-      matrix:
-        include:
-          - os: windows-latest
-            platform: win
-            artifact: '*.exe'
-          - os: ubuntu-latest
-            platform: linux
-            artifact: '*.AppImage'
-          - os: macos-latest
-            platform: mac
-            artifact: '*.dmg'
-
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
+    
+    outputs:
+      version: ${{ steps.version.outputs.timestamp }}
     
     steps:
       - name: Checkout code
@@ -41,25 +29,39 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Generate timestamp version
+        id: version
+        run: |
+          echo "timestamp=$(date -u +'%Y.%m.%d.%H%M')" >> $GITHUB_OUTPUT
+          echo "date=$(date -u +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Update package.json version
+        run: |
+          npm version ${{ steps.version.outputs.timestamp }} --no-git-tag-version --allow-same-version
+        shell: bash
+
       - name: Install dependencies
         run: npm ci
 
-      - name: Build for ${{ matrix.platform }}
-        run: npm run build:${{ matrix.platform }}
+      - name: Build for Windows
+        run: npx electron-builder --win dir
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Create 7z archive
+        run: |
+          7z a -t7z -mx=9 -mmt=on "dist/WlfRyt-YouTube-Studio-${{ steps.version.outputs.timestamp }}-win-x64.7z" "./dist/win-unpacked/*"
+        shell: bash
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: release-${{ matrix.platform }}
+          name: release-win
           path: |
-            dist/*.exe
-            dist/*.dmg
-            dist/*.AppImage
-            dist/*.zip
-            dist/*.yml
-          if-no-files-found: warn
+            dist/*.7z
+          if-no-files-found: error
 
   release:
     needs: build
@@ -69,35 +71,32 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Generate timestamp version
+        id: version
+        run: |
+          echo "timestamp=$(date -u +'%Y.%m.%d.%H%M')" >> $GITHUB_OUTPUT
+          echo "date=$(date -u +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
           merge-multiple: true
 
-      - name: Get version
-        id: version
-        run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
-            echo "tag=v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
-          else
-            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-          fi
-
       - name: List artifacts
         run: |
           echo "Artifacts to release:"
-          find artifacts -type f -name "*" | head -50
+          find artifacts -type f -name "*"
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: WlfRyt YouTube Studio v${{ steps.version.outputs.version }}
+          tag_name: v${{ steps.version.outputs.timestamp }}
+          name: WlfRyt YouTube Studio - ${{ steps.version.outputs.date }}
           body: |
-            ## WlfRyt YouTube Studio v${{ steps.version.outputs.version }}
+            ## WlfRyt YouTube Studio v${{ steps.version.outputs.timestamp }}
+            
+            **Build Date:** ${{ steps.version.outputs.date }}
             
             A standalone desktop application for YouTube Studio with persistent login and hardened security.
             
@@ -105,23 +104,19 @@ jobs:
             
             | Platform | File |
             |----------|------|
-            | Windows | `WlfRyt-YouTube-Studio-Setup-${{ steps.version.outputs.version }}.exe` |
-            | macOS | `WlfRyt-YouTube-Studio-${{ steps.version.outputs.version }}.dmg` |
-            | Linux | `WlfRyt-YouTube-Studio-${{ steps.version.outputs.version }}.AppImage` |
+            | Windows | `WlfRyt-YouTube-Studio-${{ steps.version.outputs.timestamp }}-win-x64.7z` |
             
             ### Features
             - 🔐 Persistent login with encrypted session storage
             - 🛡️ Hardened security (sandbox, context isolation)
-            - 💻 Native desktop experience
+            - 💻 Native desktop experience with system tray
+            - 🚀 Auto-start with Windows option
+            - 📥 Minimize to tray, start minimized
             - 🔒 Machine-specific encryption keys
             
             ### Installation
             
-            **Windows:** Download and run the `.exe` installer
-            
-            **macOS:** Download the `.dmg`, open it, and drag to Applications
-            
-            **Linux:** Download the `.AppImage`, make it executable (`chmod +x`), and run
+            **Windows:** Extract the `.7z` archive and run `WlfRyt YouTube Studio.exe`
             
             ---
             
@@ -129,9 +124,7 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            artifacts/**/*.exe
-            artifacts/**/*.dmg
-            artifacts/**/*.AppImage
-            artifacts/**/*.zip
+            artifacts/**/*.7z
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
