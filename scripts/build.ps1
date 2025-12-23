@@ -18,17 +18,22 @@ function Write-Color($Message, $Color = "White") {
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RootDir = Split-Path -Parent $ScriptDir
 
-# Read package.json for version
-$PackageJson = Get-Content "$RootDir\package.json" | ConvertFrom-Json
-$Version = $PackageJson.version
+# Generate timestamp-based version (YYYY.MM.DD.HHMM)
+$Version = Get-Date -Format "yyyy.MM.dd.HHmm"
 
 Write-Color "`n========================================" "Green"
 Write-Color "  WlfRyt YouTube Studio Build Script" "Green"
-Write-Color "  Version: $Version" "Green"
+Write-Color "  Version: $Version (timestamp)" "Green"
 Write-Color "========================================`n" "Green"
 
 # Change to root directory
 Set-Location $RootDir
+
+# Update package.json with timestamp version
+Write-Color "Updating version to $Version..." "Yellow"
+$PackageJson = Get-Content "$RootDir\package.json" -Raw | ConvertFrom-Json
+$PackageJson.version = $Version
+$PackageJson | ConvertTo-Json -Depth 10 | Set-Content "$RootDir\package.json" -Encoding UTF8
 
 # Clean dist folder
 Write-Color "Cleaning dist folder..." "Yellow"
